@@ -11,7 +11,6 @@ def main(filename, path_to_file, path_export, n_resize, show, file_format, photo
     from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
     from matplotlib.patches import Patch
-    sys.path.append(r'/Users/liangyunhao/Desktop/TUM/MA_Liang/LSM/T90/CR25/Results')
     import plotstyle as pltst #import custom plotstyle
     #x_lim=(100,650)
     #y_lim=()
@@ -86,7 +85,7 @@ def main(filename, path_to_file, path_export, n_resize, show, file_format, photo
         size_mat = int(120/n_resize) # size of convolution matrix
         #print('Achtung: Code läuft für Bilder mit 50-facher Vergrößerung nicht optimal')
 
-    size_mat = 5
+    size_mat = int(20/(2**(n_resize-1)))
 
     #import filters as fi
     df_weights_filt = fi.medianfilter(df_weights, size_mat)
