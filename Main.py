@@ -36,7 +36,6 @@ def main(filename, path_to_file, path_export, n_resize, show, file_format, photo
     #ax1.set(ylabel='y / $\mathrm{\mu m}$', xlabel='x / $\mathrm{\mu m}$')
     plots[0] = ax[0].imshow(df,extent=fov)
     ticks[0] = [df.min().min(),df.max().max()]
-    #ax1.set(xlim=x_lim)
 
 
     # %% filter data
@@ -123,7 +122,7 @@ def main(filename, path_to_file, path_export, n_resize, show, file_format, photo
         #threshold_weights = 1/(10**(max_val/10 - 4.3))
     
     if magnification == 50:
-        threshold_weights = adaptive_thresholding(df_error_w, int(35/(n_resize)), 0.2)
+        threshold_weights = adaptive_thresholding(df_error_w, int(35/(n_resize)), 0.1)
 
         # threshold_weights = 0.45 #manuel choose threshold
     print('threshold_weights: ', threshold_weights)
@@ -178,11 +177,11 @@ def main(filename, path_to_file, path_export, n_resize, show, file_format, photo
     print('threshold_smallholes', threshold_smallholes)
     
     # choose search-matrix size
-    mat_col = 3
-    mat_lin = 3 #round(hole_spacing / 3)
+    mat_col = 2
+    mat_lin = 8 #round(hole_spacing / 3)
     
     df_groups, n_holes = groupholes.groupholes(df_hole_w_2, mat_lin, mat_col, df_error_w, threshold_smallholes, ref_l_filt)
-    
+    print(n_holes)
     run_time_hole_numbering = time.time()-start_time3
     print('Laufzeit Number holes:', run_time_hole_numbering, 'Sekunden')
     

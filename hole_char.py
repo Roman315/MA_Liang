@@ -161,9 +161,9 @@ def find_holes(df_to_process, filter_window_hole_search):
 
     #Calculate the position(weight), diameter, and depth for each hole group
     x_weight, y_weight, radius = get_diameter(x_all_points, y_all_points, x_boundary, y_boundary, df_groups)
-    # depth = get_depth(df_to_process, x_all_points, y_all_points)
+    depth = get_depth(df_to_process, x_all_points, y_all_points)
         
-    return df_groups, x_weight, y_weight, radius
+    return df_groups, x_weight, y_weight, radius, depth
 
 def get_diameter(x_all_points, y_all_points, x_boundary, y_boundary, df_groups):
     x_weight = []
