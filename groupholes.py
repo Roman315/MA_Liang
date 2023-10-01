@@ -69,7 +69,7 @@ def groupholes(df_hole, mat_lin, mat_col, df_error_w, threshold_smallholes, ref_
     df_groups = df_groups.reset_index(drop=True) # reset row-names starting at 0
     df_groups.columns = [np.arange(0,df_groups.shape[1])] #reset column-names starting at 0
 
-    '''# filter small and shallow holes
+    # filter small and shallow holes
     for i in range(1, n+1):
         if (df_groups.isin([i])).sum().sum() < threshold_smallholes: # if hole has very few pixel
 
@@ -79,7 +79,7 @@ def groupholes(df_hole, mat_lin, mat_col, df_error_w, threshold_smallholes, ref_
             max_depth = np.amin(arr_err[arr_gr == i])
             
             if max_depth > ref_l_filt: # if hole is very shallow
-                df_groups = df_groups.replace(i, 0)'''
+                df_groups = df_groups.replace(i, 0)
     
     # filter holes at image border
     arr_gr = df_groups.to_numpy()

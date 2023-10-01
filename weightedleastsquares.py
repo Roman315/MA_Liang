@@ -98,7 +98,9 @@ def weightedlsq(df, threshold):
     df_error = pd.DataFrame(df_error) # numpy to pandas
     df_weights = np.reshape(w, (df.shape[1], df.shape[0])).T # weights in dataframe
     df_weights = pd.DataFrame(df_weights) # numpy to pandas
+    df_depth = np.reshape(y, (df.shape[1], df.shape[0])).T
+    df_depth = pd.DataFrame(df_depth)
     
     print('Iterationen Least Square:', count)
     
-    return X, y, y_org, beta, W, df_error, e, w, df_weights
+    return X, y, y_org, beta, W, df_error, e, w, df_weights, df_depth

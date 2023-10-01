@@ -5,8 +5,8 @@ import matplotlib.image as image
 path_import = r'D:\MA_Liang\LSM\Proben'
 
 #runtime settings 
-n_resize = 4 #specfify resolution (ideally: n_resize = 1), use only every n-th row and column to reduce runtime, typical value for good results at a reasonable runtime: 5
-path_export = path_import + r'\Results_n_' + str(n_resize)
+n_resize = 5 #specfify resolution (ideally: n_resize = 1), use only every n-th row and column to reduce runtime, typical value for good results at a reasonable runtime: 5
+path_export = path_import + r'\Results1_n_' + str(n_resize)
 try:
     os.mkdir(path_export) 
     print("Directory " , path_export,  " created ") 

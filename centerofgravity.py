@@ -152,7 +152,7 @@ def center(df, df_groups, n_holes, df_error_w, K, K_pro, time):
         #print(aver_depth)
         
         # Falls Tiefe über prozentualen Lochanteil bestimmt werden soll
-        '''
+        
         N_hole = df_depth_long[df_depth_long[0] < 0].shape[0]
         K_2 = round(N_hole*K_pro) #IST Runden in Ordnung?
         y_depth_max_pro = df_depth_long.nsmallest(K_2, 0) # sorts K deepest pixels in descending order
@@ -162,7 +162,7 @@ def center(df, df_groups, n_holes, df_error_w, K, K_pro, time):
             
         # calculate average depth über prozent
         aver_depth_pro = sum(y_depth_max_pro[0])/N_pro #Problem bei N_pro=0
-        '''
+        
         
         # save holenumber, radius, depth in output dataframe
         df_output.at[n, 'Lochnummer'] = n

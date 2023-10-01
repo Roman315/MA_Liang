@@ -12,6 +12,7 @@ def main(filename, path_to_file, path_export, n_resize, show, file_format, photo
     from mpl_toolkits.axes_grid1.inset_locator import inset_axes
     from matplotlib.patches import Patch
     import plotstyle as pltst #import custom plotstyle
+    import pandas as pd
     #x_lim=(100,650)
     #y_lim=()
     
@@ -54,7 +55,7 @@ def main(filename, path_to_file, path_export, n_resize, show, file_format, photo
     threshold_iteration = 10000
     
     # weighted least square
-    X, y, y_org, beta, W, df_error_w, e, w, df_weights = wlsq.weightedlsq(df_filt, threshold_iteration)
+    X, y, y_org, beta, W, df_error_w, e, w, df_weights, df_depth = wlsq.weightedlsq(df_filt, threshold_iteration)
     
     #plots
     ax[1].set(title='WLS error')
@@ -85,7 +86,8 @@ def main(filename, path_to_file, path_export, n_resize, show, file_format, photo
         size_mat = int(120/n_resize) # size of convolution matrix
         #print('Achtung: Code läuft für Bilder mit 50-facher Vergrößerung nicht optimal')
 
-    size_mat = int(20/(2**(n_resize-1)))
+    # size_mat = int(20/(2**(n_resize-1)))
+    size_mat = 5
 
     #import filters as fi
     df_weights_filt = fi.medianfilter(df_weights, size_mat)
@@ -121,13 +123,14 @@ def main(filename, path_to_file, path_export, n_resize, show, file_format, photo
         #threshold_weights = 1/(10**(max_val/10 - 4.3))
     
     if magnification == 50:
-        threshold_weights = adaptive_thresholding(df_error_w, int(35/2**(n_resize-1)), 0.035)
+        threshold_weights = adaptive_thresholding(df_error_w, int(35/(n_resize)), 0.2)
 
         # threshold_weights = 0.45 #manuel choose threshold
     print('threshold_weights: ', threshold_weights)
 
     # classify every pixel weighed below threshold as hole
-    df_hole_w_2 = (df_weights_filt < threshold_weights) * 1
+    # df_hole_w_2 = (df_error_w < threshold_weights and df_error_w < pd.DataFrame(np.zeros(df_error_w.shape[1], df_error_w.shape[0]))) * 1
+    df_hole_w_2 = (df_error_w < threshold_weights) * 1
     
     # plot 
     ax[4].set(title='Segmentation')
@@ -175,8 +178,8 @@ def main(filename, path_to_file, path_export, n_resize, show, file_format, photo
     print('threshold_smallholes', threshold_smallholes)
     
     # choose search-matrix size
-    mat_col = 2
-    mat_lin = 12 #round(hole_spacing / 3)
+    mat_col = 3
+    mat_lin = 3 #round(hole_spacing / 3)
     
     df_groups, n_holes = groupholes.groupholes(df_hole_w_2, mat_lin, mat_col, df_error_w, threshold_smallholes, ref_l_filt)
     
