@@ -1,4 +1,4 @@
-def main(filename, path_to_file, path_export, n_resize, show, file_format, photo):
+def main(filename, path_to_file, path_export, n_resize, show, file_format, photo, roh_data_filter_mat_size, hole_search_filter_mat_size, show_num_with_indentations):
     
     #%% start timer
     import time
@@ -13,8 +13,7 @@ def main(filename, path_to_file, path_export, n_resize, show, file_format, photo
     from matplotlib.patches import Patch
     import plotstyle as pltst #import custom plotstyle
     import pandas as pd
-    #x_lim=(100,650)
-    #y_lim=()
+    import openpyxl
     
     # %% import data
     import importdata as im
@@ -39,10 +38,10 @@ def main(filename, path_to_file, path_export, n_resize, show, file_format, photo
 
 
     # %% filter data
-    size_mat = 3 # size of convolution matrix
+    roh_data_filter_mat_size = 3 # size of convolution matrix
     
     import filters as fi
-    df_filt = fi.medianfilter(df, size_mat)
+    df_filt = fi.medianfilter(df, roh_data_filter_mat_size)
     
     # %% fit plane with weighted least square
     
@@ -60,37 +59,14 @@ def main(filename, path_to_file, path_export, n_resize, show, file_format, photo
     ax[1].set(title='WLS error')
     plots[1] = ax[1].imshow(df_error_w,extent=fov)
     ticks[1] = [df_error_w.min().min(),df_error_w.max().max()]
-    #ax10.set(xlim=x_lim)
     
     run_time_wls = time.time()-start_time2
     print('Laufzeit least square:', run_time_wls, 'Sekunden')
       
     # %% filter data 2nd time
-
-    if magnification == 10:
-        size_mat = int(24/n_resize) # size of convolution matrix
-        #print('Achtung: Code läuft für Bilder mit 10-facher Vergrößerung nicht optimal')
-        
-    elif magnification == 20:
-        size_mat = int(36/n_resize)
-        
-        # convolutional matrix should have odd numbers
-        if size_mat % 2: #ungerade
-            size_mat = size_mat
-        else: #gerade
-            size_mat = size_mat-1
-            #print('size_mat gerade: ',size_mat)
-
-    elif magnification == 50:
-        size_mat = int(120/n_resize) # size of convolution matrix
-        #print('Achtung: Code läuft für Bilder mit 50-facher Vergrößerung nicht optimal')
-
-    # size_mat = int(20/(2**(n_resize-1)))
-    size_mat = 5
-
+    filter_twice_size_mat = 5
     #import filters as fi
-    df_weights_filt = fi.medianfilter(df_weights, size_mat)
-    
+    df_weights_filt = fi.medianfilter(df_weights, filter_twice_size_mat)
     #plot
     plots[2] = ax[2].imshow(df_weights,extent=fov)
     ticks[2] = [df_weights.min().min(),df_weights.max().max()]
@@ -99,10 +75,7 @@ def main(filename, path_to_file, path_export, n_resize, show, file_format, photo
     ticks[3] = [df_weights_filt.min().min(),df_weights_filt.max().max()]
     ax[3].set(title='Smoothed WLS weights')
 
-   # ax11.set(xlim=x_lim)
-    #plt.colorbar()
     #%% segmentation via weights
-    
     # threshold for weights
     import referenceplane as ref
     # lower referenceplane
@@ -110,33 +83,18 @@ def main(filename, path_to_file, path_export, n_resize, show, file_format, photo
     ref_l_weights = ref.lower_ref(df_error_w, prozent_ref_l)['Z']
     print('ref_l_weights', ref_l_weights)
     
-    # choose threshold for weights
-    if ref_l_weights > -10:
-        #threshold_weights = 0.01 0.1555
-        threshold_weights = 0.1555
-    else:  #everything under the threshold is classified as hole, i.e. the larger the threshold the larger the holes or the larger the threshold the more stuff is clasified as holes
-        threshold_weights = 2.5e-05
-        #threshold_weights = 1e-11 #testing
-        #threshold_weights = 5.2536 * np.exp(0.352 * ref_l_weights) #analytical formula by Paul
-        #threshold_weights = 100 * np.exp(0.352 * ref_l_weights) #adjusted analytical formula
-        #threshold_weights = 1/(10**(max_val/10 - 4.3))
-    
-    if magnification == 50:
-        threshold_weights = adaptive_thresholding(df_error_w, int(35/(n_resize)), 0.1)
-
-        # threshold_weights = 0.45 #manuel choose threshold
-    print('threshold_weights: ', threshold_weights)
+    adaptive_threshold = adaptive_thresholding(df_error_w, int(35/(n_resize)), 0.2)
+    # threshold_weights = 0.45 #manuel choose threshold
+    print('threshold_weights: ', adaptive_threshold)    #show adaptive threshold
 
     # classify every pixel weighed below threshold as hole
     # df_hole_w_2 = (df_error_w < threshold_weights and df_error_w < pd.DataFrame(np.zeros(df_error_w.shape[1], df_error_w.shape[0]))) * 1
-    df_hole_w_2 = (df_error_w < threshold_weights) * 1
+    df_hole_w_2 = (df_error_w < adaptive_threshold) * 1    #variable used for showing the segmentation results
     
     # plot 
     ax[4].set(title='Segmentation')
-    #ax2.set(ylabel='y / $\mathrm{\mu m}$', xlabel='x / $\mathrm{\mu m}$')
-    #ax2.set(xlim=x_lim)
-    plots[4] = ax[4].imshow(df_hole_w_2,extent=fov)
-    ticks[4] = [df_hole_w_2.min().min(),df_hole_w_2.max().max()]
+    plots[4] = ax[4].imshow(df_hole_w_2, extent=fov)
+    ticks[4] = [df_hole_w_2.min().min(), df_hole_w_2.max().max()]
     
     for i in [0,1,2,3,4]:
         if i != 2:
@@ -152,54 +110,33 @@ def main(filename, path_to_file, path_export, n_resize, show, file_format, photo
         ax[i].set_yticklabels([])
         ax[i].add_artist(scalebar)
 
-    
-    #ax[2].annotate('', xy=(1.12,0.5), xytext=(1.03,0.5), xycoords='axes fraction', horizontalalignment='center', verticalalignment='center', annotation_clip=False, arrowprops=dict(facecolor='black', width=0.5, headwidth=0.5, headlength=0))    
-    #ax[3].annotate('', xy=(-0.03,0.5), xytext=(-0.11,0.5), xycoords='axes fraction', horizontalalignment='center', verticalalignment='center', annotation_clip=False, arrowprops=dict(facecolor='black', width=0.5, headwidth=0.5, headlength=0))
     ax[2].annotate('', xy=(0.5,-0.06), xytext=(0.5,-0.03), xycoords='axes fraction', horizontalalignment='center', verticalalignment='center', annotation_clip=False, arrowprops=dict(facecolor='black', width=0.5, headwidth=0.5, headlength=0.5))
     ax[3].annotate('', xy=(0.5,1.09), xytext=(0.5,1.15), xycoords='axes fraction', horizontalalignment='center', verticalalignment='center', annotation_clip=False, arrowprops=dict(facecolor='black', width=0.5, headwidth=7, headlength=7))
     ax[3].annotate('', xy=(0.5,1.15), xytext=(2.8,1.15), xycoords='axes fraction', horizontalalignment='center', verticalalignment='center', annotation_clip=False, arrowprops=dict(facecolor='black', width=0.5, headwidth=0.5, headlength=0.5))
-    #%% group holes
     
+    #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    # Group holes and shape analysis
     start_time3 = time.time()
-    
-    import groupholes
-    
-    # threshold for filter shallow holes
     import referenceplane as ref
-    # lower referenceplane
-    prozent_ref_l = 0.1 # portion of datapoints to calculate reference plane
-    ref_l_filt = ref.lower_ref(df_error_w, prozent_ref_l)['Z']
-    print('ref_l_filt', ref_l_filt)
-    
-    #threshold for filter small holes 
-    n_pixel = df.shape[0]*df.shape[1]
-    threshold_smallholes = round(n_pixel/(19660.8 / n_resize))
-    print('threshold_smallholes', threshold_smallholes)
-    
-    # choose search-matrix size
-    mat_col = 2
-    mat_lin = 8 #round(hole_spacing / 3)
-    
-    df_groups, n_holes = groupholes.groupholes(df_hole_w_2, mat_lin, mat_col, df_error_w, threshold_smallholes, ref_l_filt)
-    print(n_holes)
+    # threshold for filter shallow holes
     run_time_hole_numbering = time.time()-start_time3
     print('Laufzeit Number holes:', run_time_hole_numbering, 'Sekunden')
-    
-    #%% shape analysis
-    
     start_time4 = time.time()
     
     import centerofgravity
     
     # choose number of deepest hole-pixels for average depth calculation
-    K = 2 #2 #5
-    K_pro = 0.5
     
-    df_output, df_controll, list_dist, circles,  text_dists, x1_centers, x2_centers, ns = centerofgravity.center(df, df_groups, n_holes, df_error_w, K, K_pro, time)
-    
+    df_output, df_holes_num, circles, text_dists, x1_centers, x2_centers, ns = centerofgravity.center(df_error_w, time, adaptive_threshold, hole_search_filter_mat_size)
+    df_output.to_excel(path_export+'\\'+filename+'_result.xlsx')
+    ns = np.arange(0, len(circles)-1)
     for m, n in enumerate(ns):
         ax[5].add_artist(circles[m]) # add circle to plot
-        ax[5].text(x1_centers[m] + text_dists[m] , x2_centers[m] - text_dists[m] , n, color="red", fontsize=pltst.fontsizeannotate, clip_on=True)    # add hole number to plot
+        text_x2 = x2_centers[m] - text_dists[m]
+        text_x1 = x1_centers[m] + text_dists[m]
+        if show_num_with_indentations == True:
+            # ax[5].text(text_x2, text_x1, m, color="red", fontsize=pltst.fontsizeannotate, clip_on=True)    # add hole number to plot
+            ax[5].text(x2_centers[m], x1_centers[m], m, color="red", fontsize=5, clip_on=True)    # add hole number to plot
 
     ax[5].set(title='Geometries')
     # plots[5] = ax[5].imshow(df)    # show color-map as background in 6-th figure
@@ -241,7 +178,10 @@ def main(filename, path_to_file, path_export, n_resize, show, file_format, photo
                                )
             cbar = plt.colorbar(mappable = plots[a], cax=axins, orientation="horizontal", ticks=ticks[a]) #, fontsize = pltst.fontsizeannotate) #pad=0.01,  fraction=0.04*im_ratio) ax=ax[:,0] #location = 'bottom' cbar = fig.colorbar(plot, ax=ax[:,0], location="bottom")
             cbar.set_ticklabels(ticklabs[a], fontsize=pltst.fontsizeannotate)
-    plt.savefig(path_export+'\\'+filename+'_result.'+file_format,dpi=1200,format=file_format)
+    if show_num_with_indentations == True:
+        plt.savefig(path_export+'\\'+filename+'_result_with_num.'+file_format,dpi=1200,  format=file_format)
+    else:
+        plt.savefig(path_export+'\\'+filename+'_result.'+file_format,dpi=1200,  format=file_format)
    
     #fig3,ax3 = plt.subplots()
     #plt.title('Result: ' + filename)
@@ -282,7 +222,7 @@ def main(filename, path_to_file, path_export, n_resize, show, file_format, photo
     run_time_total = time.time()-start_time 
     print('Laufzeit Gesamt:', run_time_total, 'Sekunden')
     
-    return res_depth, res_diameter, df_output, std_depth, std_diameter, df_error_w, df_groups, df_weights, info, df, df_weights_filt, df_hole_w_2, df_controll, list_dist, y, data_size, run_time_wls, run_time_hole_numbering, run_time_geometric_center, run_time_total
+    return res_depth, res_diameter, df_output, std_depth, std_diameter, df_error_w, df_weights, info, df, df_weights_filt, df_hole_w_2, df_holes_num, y, data_size, run_time_wls, run_time_hole_numbering, run_time_geometric_center, run_time_total
 
 
 def adaptive_thresholding(df_to_process, mat_size, C):

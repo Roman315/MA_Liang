@@ -216,7 +216,7 @@ def get_depth(df_to_process, x_all_points, y_all_points):
         depth.append(sum(height[0:5]) / len(height[0:5]))
     return depth
 
-def adaptive_thresholding(df_to_process):
+def adaptive_thresholding(df_to_process, size, C):
     # Thresholding parameters
     size = 25
     C = 0.03

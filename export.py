@@ -82,5 +82,5 @@ def export(path_export, list_final, n_resize):
         for k in [6,7,8,9,10]:
             lst.append(list_final[j][k]) #append data size and runtimes to list
         results.loc[len(results)] = lst
-    results.to_csv(path_export+'/Results_n_'+str(n_resize)+'.csv') #save to csv
-    results.to_pickle(path_export+'/Results_n_'+str(n_resize)+'.pkl') #save to pkl
+    results.to_csv(path_export+r'\Results_n_'+str(n_resize)+'.csv') #save to csv
+    results.to_pickle(path_export+r'\Results_n_'+str(n_resize)+'.pkl') #save to pkl

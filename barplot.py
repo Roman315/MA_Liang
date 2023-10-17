@@ -28,7 +28,7 @@ def barplot(path_export,list_final,file_format):
     
     #plot
     fig6,ax6 = plt.subplots()
-    ax6.bar(x - pltst.barwidth/4, -arr_res[:, 0], width = pltst.barwidth/2, label='Tiefe', yerr = arr_std[:, 0], color=colors[0]) 
+    ax6.bar(x - pltst.barwidth/4, arr_res[:, 0], width = pltst.barwidth/2, label='Tiefe', yerr = arr_std[:, 0], color=colors[0]) 
     ax6.bar(x + pltst.barwidth/4, arr_res[:, 1], width = pltst.barwidth/2, label='Durchmesser', yerr = arr_std[:, 1], color=colors[1])
 
     if len(x) > 5:
